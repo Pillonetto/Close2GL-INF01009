@@ -1,0 +1,119 @@
+# Standalone Makefile (ImGui example style) for CMP143 on macOS.
+# CMake still owns the default Makefile when you configure in-tree; use:
+#   make -f Makefile.standalone
+#
+# Requires: Homebrew glfw and glm, and a Dear ImGui tree at IMGUI_DIR.
+#   brew install glfw glm
+#   make -f Makefile.standalone IMGUI_DIR=$(HOME)/imgui-1.92.6
+
+UNAME_S := $(shell uname -s)
+ifneq ($(UNAME_S),Darwin)
+$(error Makefile.standalone targets macOS only. Use CMake for Linux/Windows.)
+endif
+
+CXX      = clang++
+CC       = clang
+EXE      = bin/CMP143
+IMGUI_DIR ?= $(HOME)/imgui-1.92.6
+
+BREW_PREFIX := $(shell brew --prefix 2>/dev/null || echo /opt/homebrew)
+GLFW_PREFIX := $(shell brew --prefix glfw 2>/dev/null)
+ifeq ($(GLFW_PREFIX),)
+  GLFW_PREFIX := $(BREW_PREFIX)/opt/glfw
+endif
+GLFW_INC := $(GLFW_PREFIX)/include
+GLFW_LIB := $(GLFW_PREFIX)/lib
+GLM_INC  := $(BREW_PREFIX)/include
+
+ifeq ($(wildcard $(IMGUI_DIR)/imgui.cpp),)
+$(error IMGUI_DIR "$(IMGUI_DIR)" has no imgui.cpp — set IMGUI_DIR to your ImGui tree)
+endif
+ifeq ($(wildcard $(GLFW_INC)/GLFW/glfw3.h),)
+$(error Missing GLFW headers at $(GLFW_INC). Install with: brew install glfw)
+endif
+
+CPPFLAGS = -Iinclude -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -I$(GLFW_INC) -I$(GLM_INC)
+
+# ImGui’s apple example uses -ObjC++ -fobjc-arc because main is .mm; we only need ARC on .mm.
+CXXFLAGS    = -std=c++17 -Wall -Wextra
+CXXFLAGS_MM = -std=c++17 -Wall -Wextra -fobjc-arc
+
+# Matches CMake’s imgui target on macOS (glfw3native.h needs NSGL).
+CXXFLAGS_IMGUI_GLFW = -DGLFW_EXPOSE_NATIVE_NSGL
+
+FRAMEWORKS = -framework Cocoa -framework OpenGL -framework IOKit \
+             -framework CoreFoundation -framework CoreVideo \
+             -framework GameController
+
+LDFLAGS = -L$(GLFW_LIB)
+LIBS    = -lglfw
+
+BUILD_DIR = .make-standalone-build
+
+# Flat object names so absolute IMGUI_DIR paths work.
+OBJS = \
+	$(BUILD_DIR)/main.o \
+	$(BUILD_DIR)/camera_gui.o \
+	$(BUILD_DIR)/camera_gui_mac.o \
+	$(BUILD_DIR)/model-loader.o \
+	$(BUILD_DIR)/gl3w.o \
+	$(BUILD_DIR)/imgui.o \
+	$(BUILD_DIR)/imgui_demo.o \
+	$(BUILD_DIR)/imgui_draw.o \
+	$(BUILD_DIR)/imgui_tables.o \
+	$(BUILD_DIR)/imgui_widgets.o \
+	$(BUILD_DIR)/imgui_impl_glfw.o \
+	$(BUILD_DIR)/imgui_impl_opengl3.o
+
+.PHONY: all run clean
+
+all: $(EXE)
+
+$(EXE): $(OBJS) | bin
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(OBJS) $(LIBS) $(FRAMEWORKS) -ObjC++
+
+bin:
+	mkdir -p bin
+
+$(BUILD_DIR)/main.o: src/triangles/main.cpp
+	@mkdir -p $(BUILD_DIR)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+
+$(BUILD_DIR)/camera_gui.o: src/camera_gui.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+
+$(BUILD_DIR)/camera_gui_mac.o: src/camera_gui_mac.mm
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS_MM) -c -o $@ $<
+
+$(BUILD_DIR)/model-loader.o: src/model-loader.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+
+$(BUILD_DIR)/gl3w.o: lib/gl3w.c
+	$(CC) $(CPPFLAGS) -c -o $@ $<
+
+$(BUILD_DIR)/imgui.o: $(IMGUI_DIR)/imgui.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+
+$(BUILD_DIR)/imgui_demo.o: $(IMGUI_DIR)/imgui_demo.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+
+$(BUILD_DIR)/imgui_draw.o: $(IMGUI_DIR)/imgui_draw.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+
+$(BUILD_DIR)/imgui_tables.o: $(IMGUI_DIR)/imgui_tables.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+
+$(BUILD_DIR)/imgui_widgets.o: $(IMGUI_DIR)/imgui_widgets.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+
+$(BUILD_DIR)/imgui_impl_glfw.o: $(IMGUI_DIR)/backends/imgui_impl_glfw.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(CXXFLAGS_IMGUI_GLFW) -c -o $@ $<
+
+$(BUILD_DIR)/imgui_impl_opengl3.o: $(IMGUI_DIR)/backends/imgui_impl_opengl3.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+
+run: all
+	cd "$(CURDIR)" && ./$(EXE)
+
+clean:
+	rm -rf $(BUILD_DIR) $(EXE)

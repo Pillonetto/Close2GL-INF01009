@@ -17,3 +17,26 @@ CMakeUserPresets.json
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #cmake-build-*
+
+debug/
+build/
+.make-standalone-build/
+_deps/
+bin/
+CMakeFiles/
+lib/
+cmake-build-debug/
+.idea/
+*.o
+*.d
+*.s
+*.i
+*.exe
+*.dll
+*.lib
+*.exp
+*.def
+*.manifest
+*.res
+*.internal
+*.make
