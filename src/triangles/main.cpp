@@ -138,16 +138,15 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  const int floatsPerVertex = 6; // position xyz + normal xyz
+  const int floatsPerVertex = 7; // position xyzw (w=1 object) + normal xyz
   // this array will have all the vertices and their normals (position + normal)
   std::vector<float> interleavedVertexData(static_cast<size_t>(NumTris) * 3 *
                                            floatsPerVertex);
   for (int triangleIndex = 0; triangleIndex < NumTris; ++triangleIndex) {
     // 9 floats per triangle (3 corners * 3 floats per corner)
     const int sourceFloatBase = triangleIndex * 9;
-    // 18 floats per triangle (3 corners * 6 floats per corner = position +
-    // normal)
-    const int destinationFloatBase = triangleIndex * 18;
+    // 21 floats per triangle (3 corners * 7 floats: xyzw + normal)
+    const int destinationFloatBase = triangleIndex * 21;
     // 3 corners per triangle
     for (int cornerIndex = 0; cornerIndex < 3; ++cornerIndex) {
       const int sourceFloatOffset = sourceFloatBase + cornerIndex * 3;
@@ -155,7 +154,8 @@ int main(int argc, char **argv) {
           destinationFloatBase + cornerIndex * floatsPerVertex;
       std::memcpy(&interleavedVertexData[bufferFloatOffset],
                   &Vert[sourceFloatOffset], 3 * sizeof(float));
-      std::memcpy(&interleavedVertexData[bufferFloatOffset + 3],
+      interleavedVertexData[static_cast<size_t>(bufferFloatOffset) + 3u] = 1.f;
+      std::memcpy(&interleavedVertexData[bufferFloatOffset + 4],
                   &Vert_Normal[sourceFloatOffset], 3 * sizeof(float));
     }
   }
@@ -256,13 +256,14 @@ int main(int argc, char **argv) {
   const GLsizei vertexAttributeStrideBytes =
       static_cast<GLsizei>(floatsPerVertex * sizeof(float));
 
-  // position
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vertexAttributeStrideBytes,
+  // position (vec4: xyz + w; w=1 in object space, clip xyzw in Close2GL CPU
+  // path)
+  glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, vertexAttributeStrideBytes,
                         nullptr);
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, vertexAttributeStrideBytes,
                         reinterpret_cast<const void *>(
-                            static_cast<uintptr_t>(3 * sizeof(float))));
+                            static_cast<uintptr_t>(4 * sizeof(float))));
   glEnableVertexAttribArray(1);
 
   // load shader source from file
@@ -283,8 +284,8 @@ int main(int argc, char **argv) {
       glGetUniformLocation(shaderProgram, "uPointSize");
   GLint shadingModeUniformLocation =
       glGetUniformLocation(shaderProgram, "uShadingMode");
-  GLint close2GlCpuEyeVertexUniformLocation =
-      glGetUniformLocation(shaderProgram, "uClose2GlCpuEyeVertex");
+  GLint close2GlCpuClipVertexUniformLocation =
+      glGetUniformLocation(shaderProgram, "uClose2GlCpuClipVertex");
   GLint lightPosEyeUniformLocation =
       glGetUniformLocation(shaderProgram, "uLightPosEye");
   GLint lightColorUniformLocation =
@@ -345,6 +346,11 @@ int main(int argc, char **argv) {
     glm::mat4 model;
     glm::mat4 view;
     glm::mat4 projection;
+
+    printf("MODEL centers: (%f, %f, %f), scale: %f\n", centerX, centerY,
+           centerZ, modelScale);
+
+    // Gwt MVP matrices
     if (appearance.close2GlMode) {
       model = buildModelMatrix(centerX, centerY, centerZ, modelScale);
       view = cameraViewMatrix(camera);
@@ -354,35 +360,44 @@ int main(int argc, char **argv) {
       view = openGlViewMatrix(camera);
       projection = openGlProjectionMatrix(aspect, camera);
     }
+
     const glm::mat4 modelView = view * model;
+    // Apr 16th lecture
     const glm::mat3 normalMatrix =
         glm::transpose(glm::inverse(glm::mat3(modelView)));
 
     const int numVerts = NumTris * 3;
+
     if (appearance.close2GlMode) {
       for (int vi = 0; vi < numVerts; ++vi) {
-        const size_t o = static_cast<size_t>(vi) * 6u;
-        const glm::vec3 p(objectSpaceMesh[o], objectSpaceMesh[o + 1],
-                          objectSpaceMesh[o + 2]);
-        const glm::vec4 eye = modelView * glm::vec4(p, 1.f);
-        close2GlUploadMesh[o] = eye.x;
-        close2GlUploadMesh[o + 1] = eye.y;
-        close2GlUploadMesh[o + 2] = eye.z;
-        close2GlUploadMesh[o + 3] = objectSpaceMesh[o + 3];
+        const size_t o = static_cast<size_t>(vi) * 7u;
+        const glm::vec3 position(objectSpaceMesh[o], objectSpaceMesh[o + 1],
+                                 objectSpaceMesh[o + 2]);
+        const glm::vec4 clip =
+            projection * modelView * glm::vec4(position, 1.f);
+        const float w = clip.w;
+        const glm::vec3 ndc =
+            (w != 0.f) ? glm::vec3(clip.x / w, clip.y / w, clip.z / w)
+                       : glm::vec3(clip.x, clip.y, clip.z);
+        close2GlUploadMesh[o + 0] = ndc.x;
+        close2GlUploadMesh[o + 1] = ndc.y;
+        close2GlUploadMesh[o + 2] = ndc.z;
+        close2GlUploadMesh[o + 3] = w;
         close2GlUploadMesh[o + 4] = objectSpaceMesh[o + 4];
         close2GlUploadMesh[o + 5] = objectSpaceMesh[o + 5];
+        close2GlUploadMesh[o + 6] = objectSpaceMesh[o + 6];
       }
       glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObject);
       glBufferSubData(
           GL_ARRAY_BUFFER, 0,
           static_cast<GLsizeiptr>(close2GlUploadMesh.size() * sizeof(float)),
           close2GlUploadMesh.data());
-      glUniform1i(close2GlCpuEyeVertexUniformLocation, 1);
+      glUniform1i(close2GlCpuClipVertexUniformLocation, 1);
       const glm::mat4 identity(1.f);
       glUniformMatrix4fv(modelViewUniformLocation, 1, GL_FALSE,
                          glm::value_ptr(identity));
     } else {
-      glUniform1i(close2GlCpuEyeVertexUniformLocation, 0);
+      glUniform1i(close2GlCpuClipVertexUniformLocation, 0);
       if (prevClose2GlMode) {
         glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObject);
         glBufferSubData(
@@ -401,7 +416,7 @@ int main(int argc, char **argv) {
                        glm::value_ptr(normalMatrix));
 
     const glm::vec3 lightWorld(4.f, 6.f, 5.f);
-    const glm::vec3 lightPosEye = glm::vec3(view * glm::vec4(lightWorld, 1.f));
+    const glm::vec3 lightPosEye = glm::vec3(view / glm::vec4(lightWorld, 1.f));
     glUniform3f(lightPosEyeUniformLocation, lightPosEye.x, lightPosEye.y,
                 lightPosEye.z);
     glUniform3f(lightColorUniformLocation, 1.f, 1.f, 1.f);

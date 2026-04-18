@@ -71,7 +71,9 @@ glm::mat4 openGlProjectionMatrix(float aspect, const CameraData &cam) {
 
 glm::mat4 openGlModelMatrix(float centerX, float centerY, float centerZ,
                             float scale) {
-  return glm::scale(glm::mat4(1.f), glm::vec3(scale)) *
-         glm::translate(glm::mat4(1.f),
-                        glm::vec3(-centerX, -centerY, -centerZ));
+  auto output =
+      glm::scale(glm::mat4(1.f), glm::vec3(scale)) *
+      glm::translate(glm::mat4(1.f), glm::vec3(-centerX, -centerY, -centerZ));
+
+  return output;
 }

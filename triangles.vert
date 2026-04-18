@@ -2,8 +2,8 @@
 
 // 0 = flat, 1 = Gouraud A+D, 2 = Gouraud A+D+S, 3 = Phong (A+D+S in fragment)
 uniform int uShadingMode;
-// 1: vPosition is eye space (modelView * objectPos) computed on CPU (Close2GL).
-uniform int uClose2GlCpuEyeVertex;
+// 1: Close2GL CPU path — vPosition.xyz = NDC (clip.xyz/clip.w); vPosition.w = clip.w.
+uniform int uClose2GlCpuClipVertex;
 uniform mat4 uModelView;
 uniform mat4 uProjection;
 uniform mat3 uNormalMatrix;
@@ -16,7 +16,7 @@ uniform float uKd;
 uniform float uKs;
 uniform float uShininess;
 
-in vec3 vPosition;
+in vec4 vPosition;
 in vec3 vNormal;
 
 out vec3 vColor;
@@ -25,9 +25,16 @@ out vec3 vPosEye;
 
 void main()
 {
-    vec4 posEye = (uClose2GlCpuEyeVertex != 0)
-                      ? vec4(vPosition, 1.0)
-                      : uModelView * vec4(vPosition, 1.0);
+    vec4 posEye;
+    if (uClose2GlCpuClipVertex != 0) {
+        // Rebuild homogeneous clip after CPU perspective divide (ndc * w, w).
+         vec4 clipPos = vec4(vPosition.xyz * vPosition.w, vPosition.w);
+        posEye = inverse(uProjection) * clipPos;
+        gl_Position = clipPos;
+    } else {
+        posEye = uModelView * vec4(vPosition.xyz, 1.0);
+        gl_Position = uProjection * posEye;
+    }
     vPosEye = posEye.xyz;
     vNormalEye = normalize(uNormalMatrix * vNormal);
 
@@ -51,6 +58,5 @@ void main()
         vColor = clamp(uColor, 0.0, 1.0);
     }
 
-    gl_Position = uProjection * posEye;
     gl_PointSize = uPointSize;
 }

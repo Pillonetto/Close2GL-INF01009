@@ -1,30 +1,17 @@
 #include "close_to_gl_model.hpp"
-#include <glm/gtc/matrix_transform.hpp>
 
-namespace {
-glm::mat4 scaleMatrix(float scale) {
-  glm::mat4 matrix = glm::mat4(0.f);
+#include <glm/glm.hpp>
 
-  matrix[0][0] = scale;
-  matrix[1][1] = scale;
-  matrix[2][2] = 1.f;
-
-  return matrix;
-}
-
-glm::mat4 translateMatrix(float x, float y, float z) {
-  glm::mat4 matrix = glm::mat4(0.f);
-
-  matrix[0][3] = x;
-  matrix[1][3] = y;
-  matrix[2][3] = z;
-  matrix[3][3] = 1.f;
-  return matrix;
-}
-} // namespace
-
-// center model in origin
 glm::mat4 buildModelMatrix(float centerX, float centerY, float centerZ,
                            float scale) {
-  return scaleMatrix(scale) * translateMatrix(centerX, centerY, centerZ);
+  glm::mat4 output(1.f);
+  output[0][0] = scale;
+  output[1][1] = scale;
+  output[2][2] = scale;
+
+  output[3][0] = -scale * centerX;
+  output[3][1] = -scale * centerY;
+  output[3][2] = -scale * centerZ;
+
+  return output;
 }
