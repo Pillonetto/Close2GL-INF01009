@@ -27,6 +27,7 @@ CMakeFiles/
 lib/
 cmake-build-debug/
 .idea/
+.cache/
 *.o
 *.d
 *.s

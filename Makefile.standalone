@@ -55,6 +55,10 @@ OBJS = \
 	$(BUILD_DIR)/main.o \
 	$(BUILD_DIR)/camera_gui.o \
 	$(BUILD_DIR)/camera_gui_mac.o \
+	$(BUILD_DIR)/open_gl_matrices.o \
+	$(BUILD_DIR)/fps_counter.o \
+	$(BUILD_DIR)/close_to_gl_model.o \
+	$(BUILD_DIR)/close_to_gl_camera.o \
 	$(BUILD_DIR)/model-loader.o \
 	$(BUILD_DIR)/gl3w.o \
 	$(BUILD_DIR)/imgui.o \
@@ -84,6 +88,18 @@ $(BUILD_DIR)/camera_gui.o: src/camera_gui.cpp
 
 $(BUILD_DIR)/camera_gui_mac.o: src/camera_gui_mac.mm
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS_MM) -c -o $@ $<
+
+$(BUILD_DIR)/open_gl_matrices.o: src/open_gl_matrices.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+
+$(BUILD_DIR)/fps_counter.o: src/fps_counter.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+
+$(BUILD_DIR)/close_to_gl_model.o: src/close-to-gl/close_to_gl_model.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+
+$(BUILD_DIR)/close_to_gl_camera.o: src/close-to-gl/close_to_gl_camera.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
 
 $(BUILD_DIR)/model-loader.o: src/model-loader.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<

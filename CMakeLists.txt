@@ -75,17 +75,22 @@ if(APPLE)
   target_compile_definitions(imgui PRIVATE GLFW_EXPOSE_NATIVE_NSGL)
 endif()
 
+# Static library so these object files are always linked as one unit (avoids stale
+# link lines if CMake was not re-run after adding new .cpp files).
+add_library(cmp143_support STATIC
+  src/open_gl_matrices.cpp
+  src/fps_counter.cpp
+  src/close-to-gl/close_to_gl_model.cpp
+  src/close-to-gl/close_to_gl_camera.cpp
+)
+target_include_directories(cmp143_support PRIVATE
+  ${CMAKE_SOURCE_DIR}/include
+  ${CMAKE_SOURCE_DIR}/lib/glfw/include)
+target_link_libraries(cmp143_support PUBLIC glm::glm)
+
 add_executable(CMP143
   src/triangles/main.cpp
   src/camera_gui.cpp
-  src/open_gl_matrices.cpp
-  include/open_gl_matrices.hpp
-  src/fps_counter.cpp
-  include/fps_counter.hpp
-  src/close-to-gl/close_to_gl_model.cpp
-  include/close_to_gl_model.hpp
-  src/close-to-gl/close_to_gl_camera.cpp
-  include/close_to_gl_camera.hpp
   src/model-loader.cpp
   lib/gl3w.c
   triangles.vert
@@ -96,7 +101,7 @@ if(APPLE)
 endif()
 set_property(TARGET CMP143 PROPERTY DEBUG_POSTFIX _d)
 target_include_directories(CMP143 PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/lib/glfw/include)
-target_link_libraries(CMP143 PRIVATE ${COMMON_LIBS} glm::glm imgui)
+target_link_libraries(CMP143 PRIVATE cmp143_support ${COMMON_LIBS} imgui)
 
 IF (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_LINUX")

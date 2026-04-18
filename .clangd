@@ -1,5 +1,4 @@
 CompileFlags:
-  CompilationDatabase: build
   Add:
     - -Iinclude
     - -Ilib/glfw/include

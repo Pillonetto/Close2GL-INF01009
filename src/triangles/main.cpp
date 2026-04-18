@@ -1,14 +1,15 @@
+#include "../../include/close_to_gl_camera.hpp"
+#include "../../include/close_to_gl_model.hpp"
 #include <GL3/gl3.h>
 #include <GL3/gl3w.h>
 #include <GLFW/glfw3.h>
 #include <camera_gui.hpp>
-#include <close_to_gl_camera.hpp>
-#include <close_to_gl_model.hpp>
 #include <fps_counter.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <model-loader.hpp>
+#include <open_gl_matrices.hpp>
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
