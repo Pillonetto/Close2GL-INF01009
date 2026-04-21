@@ -4,9 +4,9 @@
 uniform int uShadingMode;
 // 1: Close2GL CPU path — vPosition.xyz = NDC (clip.xyz/clip.w); vPosition.w = clip.w.
 uniform int uClose2GlCpuClipVertex;
-uniform mat4 uModelView;
+uniform mat4 uModel;
+uniform mat4 uView;
 uniform mat4 uProjection;
-uniform mat3 uNormalMatrix;
 uniform float uPointSize;
 uniform vec3 uColor;
 uniform vec3 uLightPosEye;
@@ -26,17 +26,21 @@ out vec3 vPosEye;
 void main()
 {
     vec4 posEye;
+    mat4 modelView = uView * uModel;
+    mat3 normalMatrix = mat3(transpose(inverse(modelView)));
+    
     if (uClose2GlCpuClipVertex != 0) {
         // Rebuild homogeneous clip after CPU perspective divide (ndc * w, w).
-         vec4 clipPos = vec4(vPosition.xyz * vPosition.w, vPosition.w);
+        // For shading only.
+        vec4 clipPos = vec4(vPosition.xyz * vPosition.w, vPosition.w);
         posEye = inverse(uProjection) * clipPos;
         gl_Position = clipPos;
     } else {
-        posEye = uModelView * vec4(vPosition.xyz, 1.0);
+        posEye = modelView * vec4(vPosition.xyz, 1.0);
         gl_Position = uProjection * posEye;
     }
     vPosEye = posEye.xyz;
-    vNormalEye = normalize(uNormalMatrix * vNormal);
+    vNormalEye = normalize(normalMatrix * vNormal);
 
     if (uShadingMode == 0) {
         vColor = clamp(uColor, 0.0, 1.0);

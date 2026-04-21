@@ -273,12 +273,10 @@ int main(int argc, char **argv) {
   glUseProgram(shaderProgram);
 
   // we will feed these values to the vertex and fragment shader
-  GLint modelViewUniformLocation =
-      glGetUniformLocation(shaderProgram, "uModelView");
+  GLint modelUniformLocation = glGetUniformLocation(shaderProgram, "uModel");
+  GLint viewUniformLocation = glGetUniformLocation(shaderProgram, "uView");
   GLint projectionUniformLocation =
       glGetUniformLocation(shaderProgram, "uProjection");
-  GLint normalMatrixUniformLocation =
-      glGetUniformLocation(shaderProgram, "uNormalMatrix");
   GLint colorUniformLocation = glGetUniformLocation(shaderProgram, "uColor");
   GLint pointSizeUniformLocation =
       glGetUniformLocation(shaderProgram, "uPointSize");
@@ -350,25 +348,16 @@ int main(int argc, char **argv) {
     printf("MODEL centers: (%f, %f, %f), scale: %f\n", centerX, centerY,
            centerZ, modelScale);
 
+    const int numVerts = NumTris * 3;
+
     // Gwt MVP matrices
     if (appearance.close2GlMode) {
       model = buildModelMatrix(centerX, centerY, centerZ, modelScale);
       view = cameraViewMatrix(camera);
       projection = cameraProjectionMatrix(aspect, camera);
-    } else {
-      model = openGlModelMatrix(centerX, centerY, centerZ, modelScale);
-      view = openGlViewMatrix(camera);
-      projection = openGlProjectionMatrix(aspect, camera);
-    }
 
-    const glm::mat4 modelView = view * model;
-    // Apr 16th lecture
-    const glm::mat3 normalMatrix =
-        glm::transpose(glm::inverse(glm::mat3(modelView)));
+      const glm::mat4 modelView = view * model;
 
-    const int numVerts = NumTris * 3;
-
-    if (appearance.close2GlMode) {
       for (int vi = 0; vi < numVerts; ++vi) {
         const size_t o = static_cast<size_t>(vi) * 7u;
         const glm::vec3 position(objectSpaceMesh[o], objectSpaceMesh[o + 1],
@@ -394,9 +383,17 @@ int main(int argc, char **argv) {
           close2GlUploadMesh.data());
       glUniform1i(close2GlCpuClipVertexUniformLocation, 1);
       const glm::mat4 identity(1.f);
-      glUniformMatrix4fv(modelViewUniformLocation, 1, GL_FALSE,
+      glUniformMatrix4fv(modelUniformLocation, 1, GL_FALSE,
                          glm::value_ptr(identity));
+      glUniformMatrix4fv(viewUniformLocation, 1, GL_FALSE,
+                         glm::value_ptr(identity));
+
     } else {
+      model = openGlModelMatrix(centerX, centerY, centerZ, modelScale);
+      view = openGlViewMatrix(camera);
+      projection = openGlProjectionMatrix(aspect, camera);
+
+      // send VBO without changing position of vertices
       glUniform1i(close2GlCpuClipVertexUniformLocation, 0);
       if (prevClose2GlMode) {
         glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObject);
@@ -405,15 +402,16 @@ int main(int argc, char **argv) {
             static_cast<GLsizeiptr>(objectSpaceMesh.size() * sizeof(float)),
             objectSpaceMesh.data());
       }
-      glUniformMatrix4fv(modelViewUniformLocation, 1, GL_FALSE,
-                         glm::value_ptr(modelView));
+      glUniformMatrix4fv(modelUniformLocation, 1, GL_FALSE,
+                         glm::value_ptr(model));
+      glUniformMatrix4fv(viewUniformLocation, 1, GL_FALSE,
+                         glm::value_ptr(view));
     }
+
     prevClose2GlMode = appearance.close2GlMode;
 
     glUniformMatrix4fv(projectionUniformLocation, 1, GL_FALSE,
                        glm::value_ptr(projection));
-    glUniformMatrix3fv(normalMatrixUniformLocation, 1, GL_FALSE,
-                       glm::value_ptr(normalMatrix));
 
     const glm::vec3 lightWorld(4.f, 6.f, 5.f);
     const glm::vec3 lightPosEye = glm::vec3(view / glm::vec4(lightWorld, 1.f));
