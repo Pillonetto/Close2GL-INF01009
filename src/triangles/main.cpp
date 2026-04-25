@@ -4,6 +4,7 @@
 #include <GL3/gl3w.h>
 #include <GLFW/glfw3.h>
 #include <camera_gui.hpp>
+#include <cstdlib>
 #include <fps_counter.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -349,6 +350,7 @@ int main(int argc, char **argv) {
            centerZ, modelScale);
 
     const int numVerts = NumTris * 3;
+    int numOutOfBounds = 0;
 
     // Gwt MVP matrices
     if (appearance.close2GlMode) {
@@ -368,14 +370,20 @@ int main(int argc, char **argv) {
         const glm::vec3 ndc =
             (w != 0.f) ? glm::vec3(clip.x / w, clip.y / w, clip.z / w)
                        : glm::vec3(clip.x, clip.y, clip.z);
-        close2GlUploadMesh[o + 0] = ndc.x;
-        close2GlUploadMesh[o + 1] = ndc.y;
-        close2GlUploadMesh[o + 2] = ndc.z;
-        close2GlUploadMesh[o + 3] = w;
-        close2GlUploadMesh[o + 4] = objectSpaceMesh[o + 4];
-        close2GlUploadMesh[o + 5] = objectSpaceMesh[o + 5];
-        close2GlUploadMesh[o + 6] = objectSpaceMesh[o + 6];
+
+        if (abs(ndc.x) <= 1.0f && abs(ndc.y) <= 1.0f && abs(ndc.z) <= 1.0f) {
+          close2GlUploadMesh[o + 0] = ndc.x;
+          close2GlUploadMesh[o + 1] = ndc.y;
+          close2GlUploadMesh[o + 2] = ndc.z;
+          close2GlUploadMesh[o + 3] = w;
+          close2GlUploadMesh[o + 4] = objectSpaceMesh[o + 4];
+          close2GlUploadMesh[o + 5] = objectSpaceMesh[o + 5];
+          close2GlUploadMesh[o + 6] = objectSpaceMesh[o + 6];
+        } else {
+          numOutOfBounds++;
+        }
       }
+
       glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObject);
       glBufferSubData(
           GL_ARRAY_BUFFER, 0,
