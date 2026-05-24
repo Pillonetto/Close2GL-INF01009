@@ -82,6 +82,7 @@ add_library(cmp143_support STATIC
   src/fps_counter.cpp
   src/close-to-gl/close_to_gl_model.cpp
   src/close-to-gl/close_to_gl_camera.cpp
+  src/close-to-gl/close_to_gl_rasterizer.cpp
 )
 target_include_directories(cmp143_support PRIVATE
   ${CMAKE_SOURCE_DIR}/include
@@ -95,6 +96,8 @@ add_executable(CMP143
   lib/gl3w.c
   triangles.vert
   triangles.frag
+  close_to_gl.vert
+  close_to_gl.frag
 )
 if(APPLE)
   target_sources(CMP143 PRIVATE src/camera_gui_mac.mm)

@@ -1,0 +1,176 @@
+[
+{
+  "directory": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify",
+  "command": "/usr/bin/c++ -DGLFW_EXPOSE_NATIVE_NSGL -I/Users/pillonetto/imgui-1.92.6 -I/Users/pillonetto/imgui-1.92.6/backends -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/include\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/include\" -O3 -DNDEBUG -arch arm64 -o CMakeFiles/imgui.dir/Users/pillonetto/imgui-1.92.6/imgui.cpp.o -c /Users/pillonetto/imgui-1.92.6/imgui.cpp",
+  "file": "/Users/pillonetto/imgui-1.92.6/imgui.cpp",
+  "output": "CMakeFiles/imgui.dir/Users/pillonetto/imgui-1.92.6/imgui.cpp.o"
+},
+{
+  "directory": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify",
+  "command": "/usr/bin/c++ -DGLFW_EXPOSE_NATIVE_NSGL -I/Users/pillonetto/imgui-1.92.6 -I/Users/pillonetto/imgui-1.92.6/backends -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/include\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/include\" -O3 -DNDEBUG -arch arm64 -o CMakeFiles/imgui.dir/Users/pillonetto/imgui-1.92.6/imgui_draw.cpp.o -c /Users/pillonetto/imgui-1.92.6/imgui_draw.cpp",
+  "file": "/Users/pillonetto/imgui-1.92.6/imgui_draw.cpp",
+  "output": "CMakeFiles/imgui.dir/Users/pillonetto/imgui-1.92.6/imgui_draw.cpp.o"
+},
+{
+  "directory": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify",
+  "command": "/usr/bin/c++ -DGLFW_EXPOSE_NATIVE_NSGL -I/Users/pillonetto/imgui-1.92.6 -I/Users/pillonetto/imgui-1.92.6/backends -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/include\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/include\" -O3 -DNDEBUG -arch arm64 -o CMakeFiles/imgui.dir/Users/pillonetto/imgui-1.92.6/imgui_tables.cpp.o -c /Users/pillonetto/imgui-1.92.6/imgui_tables.cpp",
+  "file": "/Users/pillonetto/imgui-1.92.6/imgui_tables.cpp",
+  "output": "CMakeFiles/imgui.dir/Users/pillonetto/imgui-1.92.6/imgui_tables.cpp.o"
+},
+{
+  "directory": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify",
+  "command": "/usr/bin/c++ -DGLFW_EXPOSE_NATIVE_NSGL -I/Users/pillonetto/imgui-1.92.6 -I/Users/pillonetto/imgui-1.92.6/backends -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/include\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/include\" -O3 -DNDEBUG -arch arm64 -o CMakeFiles/imgui.dir/Users/pillonetto/imgui-1.92.6/imgui_widgets.cpp.o -c /Users/pillonetto/imgui-1.92.6/imgui_widgets.cpp",
+  "file": "/Users/pillonetto/imgui-1.92.6/imgui_widgets.cpp",
+  "output": "CMakeFiles/imgui.dir/Users/pillonetto/imgui-1.92.6/imgui_widgets.cpp.o"
+},
+{
+  "directory": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify",
+  "command": "/usr/bin/c++ -DGLFW_EXPOSE_NATIVE_NSGL -I/Users/pillonetto/imgui-1.92.6 -I/Users/pillonetto/imgui-1.92.6/backends -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/include\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/include\" -O3 -DNDEBUG -arch arm64 -o CMakeFiles/imgui.dir/Users/pillonetto/imgui-1.92.6/imgui_demo.cpp.o -c /Users/pillonetto/imgui-1.92.6/imgui_demo.cpp",
+  "file": "/Users/pillonetto/imgui-1.92.6/imgui_demo.cpp",
+  "output": "CMakeFiles/imgui.dir/Users/pillonetto/imgui-1.92.6/imgui_demo.cpp.o"
+},
+{
+  "directory": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify",
+  "command": "/usr/bin/c++ -DGLFW_EXPOSE_NATIVE_NSGL -I/Users/pillonetto/imgui-1.92.6 -I/Users/pillonetto/imgui-1.92.6/backends -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/include\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/include\" -O3 -DNDEBUG -arch arm64 -o CMakeFiles/imgui.dir/Users/pillonetto/imgui-1.92.6/backends/imgui_impl_glfw.cpp.o -c /Users/pillonetto/imgui-1.92.6/backends/imgui_impl_glfw.cpp",
+  "file": "/Users/pillonetto/imgui-1.92.6/backends/imgui_impl_glfw.cpp",
+  "output": "CMakeFiles/imgui.dir/Users/pillonetto/imgui-1.92.6/backends/imgui_impl_glfw.cpp.o"
+},
+{
+  "directory": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify",
+  "command": "/usr/bin/c++ -DGLFW_EXPOSE_NATIVE_NSGL -I/Users/pillonetto/imgui-1.92.6 -I/Users/pillonetto/imgui-1.92.6/backends -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/include\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/include\" -O3 -DNDEBUG -arch arm64 -o CMakeFiles/imgui.dir/Users/pillonetto/imgui-1.92.6/backends/imgui_impl_opengl3.cpp.o -c /Users/pillonetto/imgui-1.92.6/backends/imgui_impl_opengl3.cpp",
+  "file": "/Users/pillonetto/imgui-1.92.6/backends/imgui_impl_opengl3.cpp",
+  "output": "CMakeFiles/imgui.dir/Users/pillonetto/imgui-1.92.6/backends/imgui_impl_opengl3.cpp.o"
+},
+{
+  "directory": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify",
+  "command": "/usr/bin/c++  -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/include\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/include\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/_deps/glm-src\" -O3 -DNDEBUG -arch arm64 -o CMakeFiles/cmp143_support.dir/src/open_gl_matrices.cpp.o -c \"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/src/open_gl_matrices.cpp\"",
+  "file": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/src/open_gl_matrices.cpp",
+  "output": "CMakeFiles/cmp143_support.dir/src/open_gl_matrices.cpp.o"
+},
+{
+  "directory": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify",
+  "command": "/usr/bin/c++  -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/include\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/include\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/_deps/glm-src\" -O3 -DNDEBUG -arch arm64 -o CMakeFiles/cmp143_support.dir/src/fps_counter.cpp.o -c \"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/src/fps_counter.cpp\"",
+  "file": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/src/fps_counter.cpp",
+  "output": "CMakeFiles/cmp143_support.dir/src/fps_counter.cpp.o"
+},
+{
+  "directory": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify",
+  "command": "/usr/bin/c++  -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/include\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/include\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/_deps/glm-src\" -O3 -DNDEBUG -arch arm64 -o CMakeFiles/cmp143_support.dir/src/close-to-gl/close_to_gl_model.cpp.o -c \"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/src/close-to-gl/close_to_gl_model.cpp\"",
+  "file": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/src/close-to-gl/close_to_gl_model.cpp",
+  "output": "CMakeFiles/cmp143_support.dir/src/close-to-gl/close_to_gl_model.cpp.o"
+},
+{
+  "directory": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify",
+  "command": "/usr/bin/c++  -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/include\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/include\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/_deps/glm-src\" -O3 -DNDEBUG -arch arm64 -o CMakeFiles/cmp143_support.dir/src/close-to-gl/close_to_gl_camera.cpp.o -c \"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/src/close-to-gl/close_to_gl_camera.cpp\"",
+  "file": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/src/close-to-gl/close_to_gl_camera.cpp",
+  "output": "CMakeFiles/cmp143_support.dir/src/close-to-gl/close_to_gl_camera.cpp.o"
+},
+{
+  "directory": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify",
+  "command": "/usr/bin/c++  -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/include\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/include\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/_deps/glm-src\" -I/Users/pillonetto/imgui-1.92.6 -I/Users/pillonetto/imgui-1.92.6/backends -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -O3 -DNDEBUG -arch arm64 -o CMakeFiles/CMP143.dir/src/triangles/main.cpp.o -c \"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/src/triangles/main.cpp\"",
+  "file": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/src/triangles/main.cpp",
+  "output": "CMakeFiles/CMP143.dir/src/triangles/main.cpp.o"
+},
+{
+  "directory": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify",
+  "command": "/usr/bin/c++  -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/include\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/include\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/_deps/glm-src\" -I/Users/pillonetto/imgui-1.92.6 -I/Users/pillonetto/imgui-1.92.6/backends -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -O3 -DNDEBUG -arch arm64 -o CMakeFiles/CMP143.dir/src/camera_gui.cpp.o -c \"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/src/camera_gui.cpp\"",
+  "file": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/src/camera_gui.cpp",
+  "output": "CMakeFiles/CMP143.dir/src/camera_gui.cpp.o"
+},
+{
+  "directory": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify",
+  "command": "/usr/bin/c++  -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/include\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/include\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/_deps/glm-src\" -I/Users/pillonetto/imgui-1.92.6 -I/Users/pillonetto/imgui-1.92.6/backends -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -O3 -DNDEBUG -arch arm64 -o CMakeFiles/CMP143.dir/src/model-loader.cpp.o -c \"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/src/model-loader.cpp\"",
+  "file": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/src/model-loader.cpp",
+  "output": "CMakeFiles/CMP143.dir/src/model-loader.cpp.o"
+},
+{
+  "directory": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify",
+  "command": "/usr/bin/cc  -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/include\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/include\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/_deps/glm-src\" -I/Users/pillonetto/imgui-1.92.6 -I/Users/pillonetto/imgui-1.92.6/backends -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -O3 -DNDEBUG -arch arm64 -o CMakeFiles/CMP143.dir/lib/gl3w.c.o -c \"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/gl3w.c\"",
+  "file": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/gl3w.c",
+  "output": "CMakeFiles/CMP143.dir/lib/gl3w.c.o"
+},
+{
+  "directory": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify",
+  "command": "/usr/bin/c++  -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/include\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/include\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/_deps/glm-src\" -I/Users/pillonetto/imgui-1.92.6 -I/Users/pillonetto/imgui-1.92.6/backends -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -O3 -DNDEBUG -arch arm64 -o CMakeFiles/CMP143.dir/src/camera_gui_mac.mm.o -c \"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/src/camera_gui_mac.mm\"",
+  "file": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/src/camera_gui_mac.mm",
+  "output": "CMakeFiles/CMP143.dir/src/camera_gui_mac.mm.o"
+},
+{
+  "directory": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/_deps/glm-build/glm",
+  "command": "/usr/bin/c++  -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/_deps/glm-src\" -O3 -DNDEBUG -arch arm64 -Wno-c++98-compat -Wno-c++98-compat-pedantic -o CMakeFiles/glm.dir/detail/glm.cpp.o -c \"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/_deps/glm-src/glm/detail/glm.cpp\"",
+  "file": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/_deps/glm-src/glm/detail/glm.cpp",
+  "output": "_deps/glm-build/glm/CMakeFiles/glm.dir/detail/glm.cpp.o"
+},
+{
+  "directory": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/lib/glfw/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/lib/glfw/src\" -O3 -DNDEBUG -arch arm64 -fPIC   -Wall -o CMakeFiles/glfw.dir/context.c.o -c \"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src/context.c\"",
+  "file": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src/context.c",
+  "output": "lib/glfw/src/CMakeFiles/glfw.dir/context.c.o"
+},
+{
+  "directory": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/lib/glfw/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/lib/glfw/src\" -O3 -DNDEBUG -arch arm64 -fPIC   -Wall -o CMakeFiles/glfw.dir/init.c.o -c \"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src/init.c\"",
+  "file": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src/init.c",
+  "output": "lib/glfw/src/CMakeFiles/glfw.dir/init.c.o"
+},
+{
+  "directory": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/lib/glfw/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/lib/glfw/src\" -O3 -DNDEBUG -arch arm64 -fPIC   -Wall -o CMakeFiles/glfw.dir/input.c.o -c \"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src/input.c\"",
+  "file": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src/input.c",
+  "output": "lib/glfw/src/CMakeFiles/glfw.dir/input.c.o"
+},
+{
+  "directory": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/lib/glfw/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/lib/glfw/src\" -O3 -DNDEBUG -arch arm64 -fPIC   -Wall -o CMakeFiles/glfw.dir/monitor.c.o -c \"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src/monitor.c\"",
+  "file": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src/monitor.c",
+  "output": "lib/glfw/src/CMakeFiles/glfw.dir/monitor.c.o"
+},
+{
+  "directory": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/lib/glfw/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/lib/glfw/src\" -O3 -DNDEBUG -arch arm64 -fPIC   -Wall -o CMakeFiles/glfw.dir/window.c.o -c \"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src/window.c\"",
+  "file": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src/window.c",
+  "output": "lib/glfw/src/CMakeFiles/glfw.dir/window.c.o"
+},
+{
+  "directory": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/lib/glfw/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/lib/glfw/src\" -O3 -DNDEBUG -arch arm64 -fPIC   -Wall -o CMakeFiles/glfw.dir/cocoa_init.m.o -c \"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src/cocoa_init.m\"",
+  "file": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src/cocoa_init.m",
+  "output": "lib/glfw/src/CMakeFiles/glfw.dir/cocoa_init.m.o"
+},
+{
+  "directory": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/lib/glfw/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/lib/glfw/src\" -O3 -DNDEBUG -arch arm64 -fPIC   -Wall -o CMakeFiles/glfw.dir/cocoa_monitor.m.o -c \"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src/cocoa_monitor.m\"",
+  "file": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src/cocoa_monitor.m",
+  "output": "lib/glfw/src/CMakeFiles/glfw.dir/cocoa_monitor.m.o"
+},
+{
+  "directory": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/lib/glfw/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/lib/glfw/src\" -O3 -DNDEBUG -arch arm64 -fPIC   -Wall -o CMakeFiles/glfw.dir/cocoa_window.m.o -c \"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src/cocoa_window.m\"",
+  "file": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src/cocoa_window.m",
+  "output": "lib/glfw/src/CMakeFiles/glfw.dir/cocoa_window.m.o"
+},
+{
+  "directory": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/lib/glfw/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/lib/glfw/src\" -O3 -DNDEBUG -arch arm64 -fPIC   -Wall -o CMakeFiles/glfw.dir/iokit_joystick.m.o -c \"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src/iokit_joystick.m\"",
+  "file": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src/iokit_joystick.m",
+  "output": "lib/glfw/src/CMakeFiles/glfw.dir/iokit_joystick.m.o"
+},
+{
+  "directory": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/lib/glfw/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/lib/glfw/src\" -O3 -DNDEBUG -arch arm64 -fPIC   -Wall -o CMakeFiles/glfw.dir/mach_time.c.o -c \"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src/mach_time.c\"",
+  "file": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src/mach_time.c",
+  "output": "lib/glfw/src/CMakeFiles/glfw.dir/mach_time.c.o"
+},
+{
+  "directory": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/lib/glfw/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/lib/glfw/src\" -O3 -DNDEBUG -arch arm64 -fPIC   -Wall -o CMakeFiles/glfw.dir/posix_tls.c.o -c \"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src/posix_tls.c\"",
+  "file": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src/posix_tls.c",
+  "output": "lib/glfw/src/CMakeFiles/glfw.dir/posix_tls.c.o"
+},
+{
+  "directory": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/lib/glfw/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src\" -I\"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/build-restore-verify/lib/glfw/src\" -O3 -DNDEBUG -arch arm64 -fPIC   -Wall -o CMakeFiles/glfw.dir/nsgl_context.m.o -c \"/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src/nsgl_context.m\"",
+  "file": "/Users/pillonetto/Documents/ufrgs/cg/Close2GL I/lib/glfw/src/nsgl_context.m",
+  "output": "lib/glfw/src/CMakeFiles/glfw.dir/nsgl_context.m.o"
+}
+]

@@ -1,5 +1,6 @@
 #include "../../include/close_to_gl_camera.hpp"
 #include "../../include/close_to_gl_model.hpp"
+#include "../../include/software_rasterizer.hpp"
 #include <GL3/gl3.h>
 #include <GL3/gl3w.h>
 #include <GLFW/glfw3.h>
@@ -162,7 +163,6 @@ int main(int argc, char **argv) {
   }
 
   const std::vector<float> objectSpaceMesh = interleavedVertexData;
-  std::vector<float> close2GlUploadMesh(objectSpaceMesh.size());
 
   // center of the models
   float centerX, centerY, centerZ, boundingExtent;
@@ -271,7 +271,10 @@ int main(int argc, char **argv) {
   GLuint shaderProgram = linkProgram("./triangles.vert", "./triangles.frag");
   if (!shaderProgram)
     return 1;
-  glUseProgram(shaderProgram);
+  GLuint close2GLProgram =
+      linkProgram("./close_to_gl.vert", "./close_to_gl.frag");
+  if (!close2GLProgram)
+    return 1;
 
   // we will feed these values to the vertex and fragment shader
   GLint modelUniformLocation = glGetUniformLocation(shaderProgram, "uModel");
@@ -295,19 +298,48 @@ int main(int argc, char **argv) {
   GLint ksUniformLocation = glGetUniformLocation(shaderProgram, "uKs");
   GLint shininessUniformLocation =
       glGetUniformLocation(shaderProgram, "uShininess");
+  GLint rasterTextureLocation =
+      glGetUniformLocation(close2GLProgram, "uRasterTexture");
 
   ModelAppearance appearance;
   CameraData camera;
+  LightingParams lighting;
 
   // World origin is the model center after openGlModelMatrix (translate by
   // -bounds center).
   camera.lookAtTarget = glm::vec3(0.f);
 
-  glUseProgram(shaderProgram);
-  glBindVertexArray(vertexArrayObject);
+  GLuint close2GLVao = 0;
+  GLuint close2GLVertexVbo = 0;
+  GLuint close2GLTexcoordVbo = 0;
+  const float close2GLVertices[] = {
+      -1.f, -1.f, 1.f, -1.f, 1.f, 1.f, 1.f, 1.f, -1.f, 1.f, -1.f, -1.f,
+  };
+  const float close2GLTexcoords[] = {
+      0.f, 0.f, 1.f, 0.f, 1.f, 1.f, 1.f, 1.f, 0.f, 1.f, 0.f, 0.f,
+  };
+  glGenVertexArrays(1, &close2GLVao);
+  glBindVertexArray(close2GLVao);
+  glGenBuffers(1, &close2GLVertexVbo);
+  glBindBuffer(GL_ARRAY_BUFFER, close2GLVertexVbo);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(close2GLVertices), close2GLVertices,
+               GL_STATIC_DRAW);
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+  glEnableVertexAttribArray(0);
+  glGenBuffers(1, &close2GLTexcoordVbo);
+  glBindBuffer(GL_ARRAY_BUFFER, close2GLTexcoordVbo);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(close2GLTexcoords), close2GLTexcoords,
+               GL_STATIC_DRAW);
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+  glEnableVertexAttribArray(1);
+  glBindVertexArray(0);
+
+  glUseProgram(close2GLProgram);
+  glUniform1i(rasterTextureLocation, 1);
+
+  RasterFrame rasterFrame;
 
   FpsCounter fpsCounter;
-  static bool prevClose2GlMode = false;
 
   // draw loop
   while (!glfwWindowShouldClose(window)) {
@@ -346,115 +378,148 @@ int main(int argc, char **argv) {
     glm::mat4 view;
     glm::mat4 projection;
 
-    printf("MODEL centers: (%f, %f, %f), scale: %f\n", centerX, centerY,
-           centerZ, modelScale);
-
-    const int numVerts = NumTris * 3;
-    int numOutOfBounds = 0;
-
-    // Gwt MVP matrices
     if (appearance.close2GlMode) {
       model = buildModelMatrix(centerX, centerY, centerZ, modelScale);
       view = cameraViewMatrix(camera);
       projection = cameraProjectionMatrix(aspect, camera);
 
-      const glm::mat4 modelView = view * model;
+      if (framebufferWidth > 0 && framebufferHeight > 0) {
+        ensureRasterFrameSize(rasterFrame, framebufferWidth, framebufferHeight);
+        clearRasterFrame(rasterFrame, glm::vec4(0.08f, 0.08f, 0.1f, 1.f));
 
-      for (int vi = 0; vi < numVerts; ++vi) {
-        const size_t o = static_cast<size_t>(vi) * 7u;
-        const glm::vec3 position(objectSpaceMesh[o], objectSpaceMesh[o + 1],
-                                 objectSpaceMesh[o + 2]);
-        const glm::vec4 clip =
-            projection * modelView * glm::vec4(position, 1.f);
-        const float w = clip.w;
-        const glm::vec3 ndc =
-            (w != 0.f) ? glm::vec3(clip.x / w, clip.y / w, clip.z / w)
-                       : glm::vec3(clip.x, clip.y, clip.z);
+        const glm::mat4 modelView = view * model;
+        const glm::mat3 normalMatrix =
+            glm::mat3(glm::transpose(glm::inverse(modelView)));
+        const bool wireframeMode = (appearance.drawMode == 1);
+        const bool pointsMode = (appearance.drawMode == 2);
+        const glm::vec3 baseColor = clamp01(appearance.colorsRgb);
 
-        if (abs(ndc.x) <= 1.0f && abs(ndc.y) <= 1.0f && abs(ndc.z) <= 1.0f) {
-          close2GlUploadMesh[o + 0] = ndc.x;
-          close2GlUploadMesh[o + 1] = ndc.y;
-          close2GlUploadMesh[o + 2] = ndc.z;
-          close2GlUploadMesh[o + 3] = w;
-          close2GlUploadMesh[o + 4] = objectSpaceMesh[o + 4];
-          close2GlUploadMesh[o + 5] = objectSpaceMesh[o + 5];
-          close2GlUploadMesh[o + 6] = objectSpaceMesh[o + 6];
-        } else {
-          numOutOfBounds++;
+        for (int tri = 0; tri < NumTris; ++tri) {
+          RasterVertex rv[3];
+          bool discardTriangle = false;
+          for (int corner = 0; corner < 3; ++corner) {
+            const size_t vi = static_cast<size_t>(tri * 3 + corner);
+            const size_t o = vi * 7u;
+            const glm::vec3 positionObject(objectSpaceMesh[o + 0],
+                                           objectSpaceMesh[o + 1],
+                                           objectSpaceMesh[o + 2]);
+            const glm::vec3 normalObject(objectSpaceMesh[o + 4],
+                                         objectSpaceMesh[o + 5],
+                                         objectSpaceMesh[o + 6]);
+
+            const glm::vec4 posEye4 =
+                modelView * glm::vec4(positionObject, 1.f);
+            const glm::vec4 clip = projection * posEye4;
+            if (clip.w <= 0.f) {
+              discardTriangle = true;
+              break;
+            }
+            rv[corner].invW = 1.f / clip.w;
+            rv[corner].ndc = glm::vec3(clip) * rv[corner].invW;
+            rv[corner].screen = ndcToScreen(rv[corner].ndc, rasterFrame.width,
+                                            rasterFrame.height);
+            rv[corner].posEye = glm::vec3(posEye4) / posEye4.w;
+            rv[corner].normalEye = glm::normalize(normalMatrix * normalObject);
+          }
+          if (discardTriangle)
+            continue;
+          if (!trianglePassesClipZ(rv[0].ndc, rv[1].ndc, rv[2].ndc))
+            continue;
+          if (!isFrontFacingInNdc(rv[0].ndc, rv[1].ndc, rv[2].ndc,
+                                  appearance.frontFaceClockwise))
+            continue;
+
+          if (appearance.shadingMode == 1 || appearance.shadingMode == 2) {
+            const bool includeSpec = (appearance.shadingMode == 2);
+            rv[0].gouraudColor =
+                evaluatePhongLighting(baseColor, rv[0].normalEye, rv[0].posEye,
+                                      lighting, includeSpec);
+            rv[1].gouraudColor =
+                evaluatePhongLighting(baseColor, rv[1].normalEye, rv[1].posEye,
+                                      lighting, includeSpec);
+            rv[2].gouraudColor =
+                evaluatePhongLighting(baseColor, rv[2].normalEye, rv[2].posEye,
+                                      lighting, includeSpec);
+          }
+
+          if (pointsMode) {
+            rasterizeVertexPoint(rv[0], appearance.shadingMode, baseColor,
+                                 lighting, appearance.pointSize, rasterFrame);
+            rasterizeVertexPoint(rv[1], appearance.shadingMode, baseColor,
+                                 lighting, appearance.pointSize, rasterFrame);
+            rasterizeVertexPoint(rv[2], appearance.shadingMode, baseColor,
+                                 lighting, appearance.pointSize, rasterFrame);
+          } else if (wireframeMode) {
+            rasterizeWireTriangle(rv[0], rv[1], rv[2], appearance.shadingMode,
+                                  baseColor, lighting, rasterFrame);
+          } else {
+            rasterizeSolidTriangle(rv[0], rv[1], rv[2], appearance.shadingMode,
+                                   baseColor, lighting, rasterFrame);
+          }
         }
       }
 
-      glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObject);
-      glBufferSubData(
-          GL_ARRAY_BUFFER, 0,
-          static_cast<GLsizeiptr>(close2GlUploadMesh.size() * sizeof(float)),
-          close2GlUploadMesh.data());
-      glUniform1i(close2GlCpuClipVertexUniformLocation, 1);
-      const glm::mat4 identity(1.f);
-      glUniformMatrix4fv(modelUniformLocation, 1, GL_FALSE,
-                         glm::value_ptr(identity));
-      glUniformMatrix4fv(viewUniformLocation, 1, GL_FALSE,
-                         glm::value_ptr(identity));
+      glDisable(GL_DEPTH_TEST);
+      glDisable(GL_CULL_FACE);
+      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+      glClearColor(0.08f, 0.08f, 0.1f, 1.f);
+      glClear(GL_COLOR_BUFFER_BIT);
 
+      if (rasterFrame.textureId != 0 && rasterFrame.width > 0 &&
+          rasterFrame.height > 0) {
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, rasterFrame.textureId);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, rasterFrame.width,
+                        rasterFrame.height, GL_RGBA, GL_UNSIGNED_BYTE,
+                        rasterFrame.color.data());
+      }
+      glUseProgram(close2GLProgram);
+      glBindVertexArray(close2GLVao);
+      glDrawArrays(GL_TRIANGLES, 0, 6);
     } else {
       model = openGlModelMatrix(centerX, centerY, centerZ, modelScale);
       view = openGlViewMatrix(camera);
       projection = openGlProjectionMatrix(aspect, camera);
 
-      // send VBO without changing position of vertices
+      glUseProgram(shaderProgram);
+      glBindVertexArray(vertexArrayObject);
       glUniform1i(close2GlCpuClipVertexUniformLocation, 0);
-      if (prevClose2GlMode) {
-        glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObject);
-        glBufferSubData(
-            GL_ARRAY_BUFFER, 0,
-            static_cast<GLsizeiptr>(objectSpaceMesh.size() * sizeof(float)),
-            objectSpaceMesh.data());
-      }
       glUniformMatrix4fv(modelUniformLocation, 1, GL_FALSE,
                          glm::value_ptr(model));
       glUniformMatrix4fv(viewUniformLocation, 1, GL_FALSE,
                          glm::value_ptr(view));
+      glUniformMatrix4fv(projectionUniformLocation, 1, GL_FALSE,
+                         glm::value_ptr(projection));
+      glUniform3f(lightPosEyeUniformLocation, lighting.lightPosEye.x,
+                  lighting.lightPosEye.y, lighting.lightPosEye.z);
+      glUniform3f(lightColorUniformLocation, lighting.lightColor.x,
+                  lighting.lightColor.y, lighting.lightColor.z);
+      glUniform1f(ambientUniformLocation, lighting.ambient);
+      glUniform1f(kdUniformLocation, lighting.kd);
+      glUniform1f(ksUniformLocation, lighting.ks);
+      glUniform1f(shininessUniformLocation, lighting.shininess);
+
+      glUniform1i(shadingModeUniformLocation, appearance.shadingMode);
+      glUniform3f(colorUniformLocation, appearance.colorsRgb.x,
+                  appearance.colorsRgb.y, appearance.colorsRgb.z);
+
+      const bool pointsMode = (appearance.drawMode == 2);
+      const bool wireframeMode = (appearance.drawMode == 1);
+      glFrontFace(appearance.frontFaceClockwise ? GL_CW : GL_CCW);
+      glEnable(GL_DEPTH_TEST);
+      glEnable(GL_CULL_FACE);
+      glPolygonMode(GL_FRONT_AND_BACK, wireframeMode ? GL_LINE : GL_FILL);
+      glLineWidth(1.f);
+      glUniform1f(pointSizeUniformLocation,
+                  pointsMode ? appearance.pointSize : 1.f);
+
+      glClearColor(0.08f, 0.08f, 0.1f, 1.f);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+      const GLenum primitive = pointsMode ? GL_POINTS : GL_TRIANGLES;
+      glDrawArrays(primitive, 0, NumTris * 3);
+      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
-
-    prevClose2GlMode = appearance.close2GlMode;
-
-    glUniformMatrix4fv(projectionUniformLocation, 1, GL_FALSE,
-                       glm::value_ptr(projection));
-
-    const glm::vec3 lightWorld(4.f, 6.f, 5.f);
-    const glm::vec3 lightPosEye = glm::vec3(view / glm::vec4(lightWorld, 1.f));
-    glUniform3f(lightPosEyeUniformLocation, lightPosEye.x, lightPosEye.y,
-                lightPosEye.z);
-    glUniform3f(lightColorUniformLocation, 1.f, 1.f, 1.f);
-    glUniform1f(ambientUniformLocation, 0.12f);
-    glUniform1f(kdUniformLocation, 0.85f);
-    glUniform1f(ksUniformLocation, 0.45f);
-    glUniform1f(shininessUniformLocation, 48.f);
-
-    glUniform1i(shadingModeUniformLocation, appearance.shadingMode);
-    glUniform3f(colorUniformLocation, appearance.colorsRgb.x,
-                appearance.colorsRgb.y, appearance.colorsRgb.z);
-
-    // set drawing mode
-    const bool pointsMode = (appearance.drawMode == 2);
-    const bool wireframeMode = (appearance.drawMode == 1);
-
-    glFrontFace(appearance.frontFaceClockwise ? GL_CW : GL_CCW);
-
-    // set polygon mode and coloring mode
-    glPolygonMode(GL_FRONT_AND_BACK, wireframeMode ? GL_LINE : GL_FILL);
-    glLineWidth(1.f);
-    glUniform1f(pointSizeUniformLocation,
-                pointsMode ? appearance.pointSize : 1.f);
-
-    glClearColor(0.08f, 0.08f, 0.1f, 1.f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    const GLenum primitive = pointsMode ? GL_POINTS : GL_TRIANGLES;
-    glDrawArrays(primitive, 0, NumTris * 3);
-
-    // reset polygon mode
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     char mainTitle[80];
     std::snprintf(mainTitle, sizeof(mainTitle), "CMP143 | %.1f FPS",
@@ -468,6 +533,16 @@ int main(int argc, char **argv) {
   ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplGlfw_Shutdown();
   ImGui::DestroyContext();
+
+  if (rasterFrame.textureId != 0)
+    glDeleteTextures(1, &rasterFrame.textureId);
+  glDeleteBuffers(1, &close2GLVertexVbo);
+  glDeleteBuffers(1, &close2GLTexcoordVbo);
+  glDeleteVertexArrays(1, &close2GLVao);
+  glDeleteProgram(close2GLProgram);
+  glDeleteProgram(shaderProgram);
+  glDeleteBuffers(1, &vertexBufferObject);
+  glDeleteVertexArrays(1, &vertexArrayObject);
 
   cameraGuiDestroyWindow(cameraUiWindow);
   glfwDestroyWindow(window);
