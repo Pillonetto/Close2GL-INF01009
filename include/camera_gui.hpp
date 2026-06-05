@@ -17,15 +17,20 @@ struct CameraData {
 // Single RGB + rasterization style
 struct ModelAppearance {
   glm::vec3 colorsRgb{0.7f, 0.7f, 0.7f};
-  // 0 = flat (uniform color), 1 = Gouraud A+D, 2 = Gouraud A+D+S, 3 = Phong A+D+S.
+  // 0 = flat (uniform color), 1 = Gouraud A+D, 2 = Gouraud A+D+S, 3 = Phong
+  // A+D+S.
   int shadingMode = 0;
   // 0 = filled triangles, 1 = wireframe, 2 = points at each vertex position.
   int drawMode = 0;
   float pointSize = 8.f;
   // false = GL_CCW (default), true = GL_CW
   bool frontFaceClockwise = false;
-  // false = OpenGL pipeline, true = Close2GL pipeline (toggle only; wire in main).
+  // false = OpenGL pipeline, true = Close2GL pipeline (toggle only; wire in
+  // main).
   bool close2GlMode = false;
+  bool textureEnabled = true;
+  int textureFilter = 1;
+  bool textureAvailable = false;
 };
 
 #include "open_gl_matrices.hpp"
@@ -44,4 +49,4 @@ void cameraGuiMacRaiseWindow(GLFWwindow *uiWindow);
 // Draw the full-window control panel (call with the UI window’s GL context
 // current). `framesPerSecond` is shown at the top (smoothed by the caller).
 void drawCameraTranslationGui(CameraData &cam, ModelAppearance &appearance,
-                                float framesPerSecond);
+                              float framesPerSecond);

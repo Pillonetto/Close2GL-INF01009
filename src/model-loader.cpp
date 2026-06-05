@@ -33,6 +33,8 @@ struct Triangle {
   Vec3 A, B, C;
   Vec3 Norm[3];
   int mat[3]{0, 0, 0};
+  float s[3]{0.f, 0.f, 0.f};
+  float t[3]{0.f, 0.f, 0.f};
 };
 
 } // namespace
@@ -41,6 +43,8 @@ int NumTris = 0;
 std::vector<Material> materials;
 float *Vert = nullptr;
 float *Vert_Normal = nullptr;
+float *Vert_Texture = nullptr;
+bool ModelHasTexture = false;
 
 static std::string trim(std::string s) {
   size_t a = 0;
@@ -67,7 +71,8 @@ static bool nextNonEmptyLine(std::ifstream &file, std::string &out) {
 }
 
 static bool readVertexLine(const std::string &line, const char *prefix,
-                           Vec3 &pos, Vec3 &nrm, int &matIdx) {
+                           Vec3 &pos, Vec3 &nrm, int &matIdx, bool hasTexture,
+                           float &s, float &t) {
   std::istringstream iss(line);
   std::string tag;
   iss >> tag;
@@ -75,6 +80,13 @@ static bool readVertexLine(const std::string &line, const char *prefix,
     return false;
   if (!(iss >> pos.x >> pos.y >> pos.z >> nrm.x >> nrm.y >> nrm.z >> matIdx))
     return false;
+  if (hasTexture) {
+    if (!(iss >> s >> t))
+      return false;
+  } else {
+    s = 0.f;
+    t = 0.f;
+  }
   return true;
 }
 
@@ -92,12 +104,15 @@ void freeModelBuffers() {
   Vert = nullptr;
   delete[] Vert_Normal;
   Vert_Normal = nullptr;
+  delete[] Vert_Texture;
+  Vert_Texture = nullptr;
 }
 
 void loadModel(const std::string &fileName) {
   freeModelBuffers();
   materials.clear();
   NumTris = 0;
+  ModelHasTexture = false;
 
   std::ifstream file(fileName);
   if (!file.is_open()) {
@@ -176,19 +191,31 @@ void loadModel(const std::string &fileName) {
   while (nextNonEmptyLine(file, line)) {
     if (line.rfind("--", 0) == 0)
       break;
+    if (line.find("Texture") != std::string::npos) {
+      size_t eq = line.find('=');
+      if (eq != std::string::npos) {
+        std::string value = trim(line.substr(eq + 1));
+        for (char &c : value)
+          c = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+        ModelHasTexture = (value.rfind("YES", 0) == 0);
+      }
+    }
   }
 
   std::vector<Triangle> triangles(static_cast<size_t>(NumTris));
   for (int i = 0; i < NumTris; ++i) {
     Triangle &t = triangles[static_cast<size_t>(i)];
     if (!nextNonEmptyLine(file, line) ||
-        !readVertexLine(line, "v0", t.A, t.Norm[0], t.mat[0]))
+        !readVertexLine(line, "v0", t.A, t.Norm[0], t.mat[0], ModelHasTexture,
+                        t.s[0], t.t[0]))
       goto parse_error;
     if (!nextNonEmptyLine(file, line) ||
-        !readVertexLine(line, "v1", t.B, t.Norm[1], t.mat[1]))
+        !readVertexLine(line, "v1", t.B, t.Norm[1], t.mat[1], ModelHasTexture,
+                        t.s[1], t.t[1]))
       goto parse_error;
     if (!nextNonEmptyLine(file, line) ||
-        !readVertexLine(line, "v2", t.C, t.Norm[2], t.mat[2]))
+        !readVertexLine(line, "v2", t.C, t.Norm[2], t.mat[2], ModelHasTexture,
+                        t.s[2], t.t[2]))
       goto parse_error;
     Vec3 faceNormal;
     if (!nextNonEmptyLine(file, line) || !readFaceNormalLine(line, faceNormal))
@@ -206,8 +233,18 @@ void loadModel(const std::string &fileName) {
 
   Vert = new float[9 * NumTris];
   Vert_Normal = new float[9 * NumTris];
+  if (ModelHasTexture)
+    Vert_Texture = new float[6 * NumTris];
   for (int i = 0; i < NumTris; ++i) {
     const Triangle &tri = triangles[static_cast<size_t>(i)];
+    if (ModelHasTexture) {
+      Vert_Texture[6 * i + 0] = tri.s[0];
+      Vert_Texture[6 * i + 1] = tri.t[0];
+      Vert_Texture[6 * i + 2] = tri.s[1];
+      Vert_Texture[6 * i + 3] = tri.t[1];
+      Vert_Texture[6 * i + 4] = tri.s[2];
+      Vert_Texture[6 * i + 5] = tri.t[2];
+    }
     Vert[9 * i] = tri.A.x;
     Vert[9 * i + 1] = tri.A.y;
     Vert[9 * i + 2] = tri.A.z;

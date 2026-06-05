@@ -129,6 +129,24 @@ void drawCameraTranslationGui(CameraData &cam, ModelAppearance &appearance,
                   &appearance.frontFaceClockwise);
 
   ImGui::Separator();
+  ImGui::TextUnformatted("Texture mapping");
+  if (appearance.textureAvailable) {
+    ImGui::Checkbox("Texture ON", &appearance.textureEnabled);
+    const char *filterItems[] = {"Nearest neighbor", "Bilinear",
+                                 "Trilinear (mip mapping)"};
+    ImGui::BeginDisabled(!appearance.textureEnabled);
+    ImGui::Combo("Resampling", &appearance.textureFilter, filterItems,
+                 IM_ARRAYSIZE(filterItems));
+    ImGui::EndDisabled();
+    if (appearance.textureFilter < 0)
+      appearance.textureFilter = 0;
+    if (appearance.textureFilter > 2)
+      appearance.textureFilter = 2;
+  } else {
+    ImGui::TextDisabled("Loaded scene has no texture.");
+  }
+
+  ImGui::Separator();
   ImGui::TextUnformatted("Rendering pipeline");
   if (ImGui::RadioButton("OpenGL", !appearance.close2GlMode))
     appearance.close2GlMode = false;

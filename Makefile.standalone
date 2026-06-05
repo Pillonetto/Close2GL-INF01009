@@ -60,6 +60,7 @@ OBJS = \
 	$(BUILD_DIR)/close_to_gl_model.o \
 	$(BUILD_DIR)/close_to_gl_camera.o \
 	$(BUILD_DIR)/close_to_gl_rasterizer.o \
+	$(BUILD_DIR)/texture.o \
 	$(BUILD_DIR)/model-loader.o \
 	$(BUILD_DIR)/gl3w.o \
 	$(BUILD_DIR)/imgui.o \
@@ -103,6 +104,9 @@ $(BUILD_DIR)/close_to_gl_camera.o: src/close-to-gl/close_to_gl_camera.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
 
 $(BUILD_DIR)/close_to_gl_rasterizer.o: src/close-to-gl/close_to_gl_rasterizer.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+
+$(BUILD_DIR)/texture.o: src/close-to-gl/texture.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
 
 $(BUILD_DIR)/model-loader.o: src/model-loader.cpp

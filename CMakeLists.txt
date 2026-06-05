@@ -83,6 +83,7 @@ add_library(cmp143_support STATIC
   src/close-to-gl/close_to_gl_model.cpp
   src/close-to-gl/close_to_gl_camera.cpp
   src/close-to-gl/close_to_gl_rasterizer.cpp
+  src/close-to-gl/texture.cpp
 )
 target_include_directories(cmp143_support PRIVATE
   ${CMAKE_SOURCE_DIR}/include

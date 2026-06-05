@@ -85,6 +85,7 @@ GLuint linkProgram(const char *vertexShaderPath,
   // bind parameters to shader variables
   glBindAttribLocation(program, 0, "vPosition");
   glBindAttribLocation(program, 1, "vNormal");
+  glBindAttribLocation(program, 2, "vTexCoord");
   // attach program to gpu
   glLinkProgram(program);
   // delete shaders from gpu (linked to program already)
@@ -131,24 +132,40 @@ void modelBounds(float &centerX, float &centerY, float &centerZ,
 } // namespace
 
 int main(int argc, char **argv) {
-  const char *modelPath = (argc > 1) ? argv[1] : "./models/cow_up.in";
+  const char *modelPath = (argc > 1) ? argv[1] : "./models/textured_cube.in";
+
+  const char *texturePath = (argc > 2) ? argv[2] : "./textures/checker.ppm";
 
   // loads NumTris, Vert, Vert_Normal
   loadModel(modelPath);
   if (NumTris <= 0 || !Vert || !Vert_Normal) {
-    std::cerr << "Failed to load: " << modelPath << std::endl;
+    std::cerr << "Failed to load: " << modelPath
+              << " (run from the project root so relative paths resolve)."
+              << std::endl;
     return 1;
   }
+  std::cerr << "Loaded '" << modelPath << "': " << NumTris
+            << " triangles, texture=" << (ModelHasTexture ? "YES" : "NO")
+            << std::endl;
 
-  const int floatsPerVertex = 7; // position xyzw (w=1 object) + normal xyz
+  Texture cpuTexture;
+  if (ModelHasTexture) {
+    if (!cpuTexture.loadFromFile(texturePath)) {
+      std::cerr << "WARNING: scene declares a texture but image '"
+                << texturePath << "' could not be loaded; rendering untextured."
+                << std::endl;
+      ModelHasTexture = false;
+    }
+  }
+
+  const int floatsPerVertex = 9;
   // this array will have all the vertices and their normals (position + normal)
   std::vector<float> interleavedVertexData(static_cast<size_t>(NumTris) * 3 *
                                            floatsPerVertex);
   for (int triangleIndex = 0; triangleIndex < NumTris; ++triangleIndex) {
     // 9 floats per triangle (3 corners * 3 floats per corner)
     const int sourceFloatBase = triangleIndex * 9;
-    // 21 floats per triangle (3 corners * 7 floats: xyzw + normal)
-    const int destinationFloatBase = triangleIndex * 21;
+    const int destinationFloatBase = triangleIndex * 3 * floatsPerVertex;
     // 3 corners per triangle
     for (int cornerIndex = 0; cornerIndex < 3; ++cornerIndex) {
       const int sourceFloatOffset = sourceFloatBase + cornerIndex * 3;
@@ -159,6 +176,13 @@ int main(int argc, char **argv) {
       interleavedVertexData[static_cast<size_t>(bufferFloatOffset) + 3u] = 1.f;
       std::memcpy(&interleavedVertexData[bufferFloatOffset + 4],
                   &Vert_Normal[sourceFloatOffset], 3 * sizeof(float));
+      float texS = 0.f, texT = 0.f;
+      if (ModelHasTexture && Vert_Texture) {
+        texS = Vert_Texture[triangleIndex * 6 + cornerIndex * 2 + 0];
+        texT = Vert_Texture[triangleIndex * 6 + cornerIndex * 2 + 1];
+      }
+      interleavedVertexData[static_cast<size_t>(bufferFloatOffset) + 7u] = texS;
+      interleavedVertexData[static_cast<size_t>(bufferFloatOffset) + 8u] = texT;
     }
   }
 
@@ -172,7 +196,13 @@ int main(int argc, char **argv) {
   const float modelScale = 1.8f / boundingExtent;
 
   // window control, ai-generated
-  glfwInit();
+  if (!glfwInit()) {
+    std::cerr << "ERROR: glfwInit() failed (no display / GLFW could not "
+                 "initialize)."
+              << std::endl;
+    freeModelBuffers();
+    return 1;
+  }
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -183,12 +213,21 @@ int main(int argc, char **argv) {
 
   GLFWwindow *window = glfwCreateWindow(1024, 768, "CMP143", nullptr, nullptr);
   if (!window) {
+    const char *desc = nullptr;
+    glfwGetError(&desc);
+    std::cerr << "ERROR: glfwCreateWindow() failed: "
+              << (desc ? desc : "unknown error") << std::endl;
     freeModelBuffers();
+    glfwTerminate();
     return 1;
   }
   glfwMakeContextCurrent(window);
   if (gl3wInit() != 0) {
+    std::cerr << "ERROR: gl3wInit() failed (could not load OpenGL functions)."
+              << std::endl;
     freeModelBuffers();
+    glfwDestroyWindow(window);
+    glfwTerminate();
     return 1;
   }
 
@@ -266,15 +305,27 @@ int main(int argc, char **argv) {
                         reinterpret_cast<const void *>(
                             static_cast<uintptr_t>(4 * sizeof(float))));
   glEnableVertexAttribArray(1);
+  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, vertexAttributeStrideBytes,
+                        reinterpret_cast<const void *>(
+                            static_cast<uintptr_t>(7 * sizeof(float))));
+  glEnableVertexAttribArray(2);
 
   // load shader source from file
   GLuint shaderProgram = linkProgram("./triangles.vert", "./triangles.frag");
-  if (!shaderProgram)
+  if (!shaderProgram) {
+    std::cerr << "ERROR: failed to build ./triangles.{vert,frag} (see log "
+                 "above). Run from the project root."
+              << std::endl;
     return 1;
+  }
   GLuint close2GLProgram =
       linkProgram("./close_to_gl.vert", "./close_to_gl.frag");
-  if (!close2GLProgram)
+  if (!close2GLProgram) {
+    std::cerr << "ERROR: failed to build ./close_to_gl.{vert,frag} (see log "
+                 "above). Run from the project root."
+              << std::endl;
     return 1;
+  }
 
   // we will feed these values to the vertex and fragment shader
   GLint modelUniformLocation = glGetUniformLocation(shaderProgram, "uModel");
@@ -300,8 +351,36 @@ int main(int argc, char **argv) {
       glGetUniformLocation(shaderProgram, "uShininess");
   GLint rasterTextureLocation =
       glGetUniformLocation(close2GLProgram, "uRasterTexture");
+  GLint textureSamplerLocation =
+      glGetUniformLocation(shaderProgram, "uTexture");
+  GLint textureEnabledLocation =
+      glGetUniformLocation(shaderProgram, "uTextureEnabled");
+
+  GLuint glTextureId = 0;
+  if (ModelHasTexture && cpuTexture.valid) {
+    const Texture::Level &base = cpuTexture.levels[0];
+    std::vector<std::uint8_t> bytes(static_cast<size_t>(base.width) *
+                                    static_cast<size_t>(base.height) * 4u);
+    for (size_t i = 0; i < base.texels.size(); ++i) {
+      const glm::vec4 c = glm::clamp(base.texels[i], 0.f, 1.f);
+      bytes[i * 4 + 0] = static_cast<std::uint8_t>(c.r * 255.f);
+      bytes[i * 4 + 1] = static_cast<std::uint8_t>(c.g * 255.f);
+      bytes[i * 4 + 2] = static_cast<std::uint8_t>(c.b * 255.f);
+      bytes[i * 4 + 3] = static_cast<std::uint8_t>(c.a * 255.f);
+    }
+    glActiveTexture(GL_TEXTURE0);
+    glGenTextures(1, &glTextureId);
+    glBindTexture(GL_TEXTURE_2D, glTextureId);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, base.width, base.height, 0,
+                 GL_RGBA, GL_UNSIGNED_BYTE, bytes.data());
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  }
 
   ModelAppearance appearance;
+  appearance.textureAvailable = ModelHasTexture;
   CameraData camera;
   LightingParams lighting;
 
@@ -394,12 +473,18 @@ int main(int argc, char **argv) {
         const bool pointsMode = (appearance.drawMode == 2);
         const glm::vec3 baseColor = clamp01(appearance.colorsRgb);
 
+        TextureState textureState;
+        textureState.texture = &cpuTexture;
+        textureState.enabled =
+            ModelHasTexture && cpuTexture.valid && appearance.textureEnabled;
+        textureState.filter = appearance.textureFilter;
+
         for (int tri = 0; tri < NumTris; ++tri) {
           RasterVertex rv[3];
           bool discardTriangle = false;
           for (int corner = 0; corner < 3; ++corner) {
             const size_t vi = static_cast<size_t>(tri * 3 + corner);
-            const size_t o = vi * 7u;
+            const size_t o = vi * 9u;
             const glm::vec3 positionObject(objectSpaceMesh[o + 0],
                                            objectSpaceMesh[o + 1],
                                            objectSpaceMesh[o + 2]);
@@ -420,6 +505,8 @@ int main(int argc, char **argv) {
                                             rasterFrame.height);
             rv[corner].posEye = glm::vec3(posEye4) / posEye4.w;
             rv[corner].normalEye = glm::normalize(normalMatrix * normalObject);
+            rv[corner].texCoord =
+                glm::vec2(objectSpaceMesh[o + 7], objectSpaceMesh[o + 8]);
           }
           if (discardTriangle)
             continue;
@@ -431,30 +518,31 @@ int main(int argc, char **argv) {
 
           if (appearance.shadingMode == 1 || appearance.shadingMode == 2) {
             const bool includeSpec = (appearance.shadingMode == 2);
-            rv[0].gouraudColor =
-                evaluatePhongLighting(baseColor, rv[0].normalEye, rv[0].posEye,
-                                      lighting, includeSpec);
-            rv[1].gouraudColor =
-                evaluatePhongLighting(baseColor, rv[1].normalEye, rv[1].posEye,
-                                      lighting, includeSpec);
-            rv[2].gouraudColor =
-                evaluatePhongLighting(baseColor, rv[2].normalEye, rv[2].posEye,
-                                      lighting, includeSpec);
+            for (int c = 0; c < 3; ++c) {
+              evaluatePhongComponents(baseColor, rv[c].normalEye, rv[c].posEye,
+                                      lighting, includeSpec, rv[c].gouraudColor,
+                                      rv[c].gouraudSpecular);
+            }
           }
 
           if (pointsMode) {
             rasterizeVertexPoint(rv[0], appearance.shadingMode, baseColor,
-                                 lighting, appearance.pointSize, rasterFrame);
+                                 lighting, textureState, appearance.pointSize,
+                                 rasterFrame);
             rasterizeVertexPoint(rv[1], appearance.shadingMode, baseColor,
-                                 lighting, appearance.pointSize, rasterFrame);
+                                 lighting, textureState, appearance.pointSize,
+                                 rasterFrame);
             rasterizeVertexPoint(rv[2], appearance.shadingMode, baseColor,
-                                 lighting, appearance.pointSize, rasterFrame);
+                                 lighting, textureState, appearance.pointSize,
+                                 rasterFrame);
           } else if (wireframeMode) {
             rasterizeWireTriangle(rv[0], rv[1], rv[2], appearance.shadingMode,
-                                  baseColor, lighting, rasterFrame);
+                                  baseColor, lighting, textureState,
+                                  rasterFrame);
           } else {
             rasterizeSolidTriangle(rv[0], rv[1], rv[2], appearance.shadingMode,
-                                   baseColor, lighting, rasterFrame);
+                                   baseColor, lighting, textureState,
+                                   rasterFrame);
           }
         }
       }
@@ -503,6 +591,26 @@ int main(int argc, char **argv) {
       glUniform3f(colorUniformLocation, appearance.colorsRgb.x,
                   appearance.colorsRgb.y, appearance.colorsRgb.z);
 
+      const bool useTexture =
+          ModelHasTexture && glTextureId != 0 && appearance.textureEnabled;
+      glUniform1i(textureEnabledLocation, useTexture ? 1 : 0);
+      if (glTextureId != 0) {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, glTextureId);
+        glUniform1i(textureSamplerLocation, 0);
+        GLint minFilter = GL_NEAREST;
+        GLint magFilter = GL_NEAREST;
+        if (appearance.textureFilter == 1) {
+          minFilter = GL_LINEAR;
+          magFilter = GL_LINEAR;
+        } else if (appearance.textureFilter == 2) {
+          minFilter = GL_LINEAR_MIPMAP_LINEAR;
+          magFilter = GL_LINEAR;
+        }
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
+      }
+
       const bool pointsMode = (appearance.drawMode == 2);
       const bool wireframeMode = (appearance.drawMode == 1);
       glFrontFace(appearance.frontFaceClockwise ? GL_CW : GL_CCW);
@@ -536,6 +644,8 @@ int main(int argc, char **argv) {
 
   if (rasterFrame.textureId != 0)
     glDeleteTextures(1, &rasterFrame.textureId);
+  if (glTextureId != 0)
+    glDeleteTextures(1, &glTextureId);
   glDeleteBuffers(1, &close2GLVertexVbo);
   glDeleteBuffers(1, &close2GLTexcoordVbo);
   glDeleteVertexArrays(1, &close2GLVao);

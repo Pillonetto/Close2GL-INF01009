@@ -24,6 +24,9 @@ extern float *Vert;
 // array with (x,y,z) for each vertex normal (3 per triangle) (9 floats per
 // triangle)
 extern float *Vert_Normal;
+// array with (s,t) for each vertex (3 per triangle) (6 floats per triangle)
+extern float *Vert_Texture;
+extern bool ModelHasTexture;
 
 void loadModel(const std::string &fileName);
 void freeModelBuffers();

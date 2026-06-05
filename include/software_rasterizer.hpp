@@ -1,5 +1,7 @@
 #pragma once
 
+#include "texture.hpp"
+
 #include <GL3/gl3.h>
 #include <cstdint>
 #include <glm/glm.hpp>
@@ -20,7 +22,15 @@ struct RasterVertex {
   glm::vec3 normalEye{0.f};
   glm::vec3 posEye{0.f};
   glm::vec3 gouraudColor{0.f};
+  glm::vec3 gouraudSpecular{0.f};
+  glm::vec2 texCoord{0.f};
   float invW = 0.f;
+};
+
+struct TextureState {
+  const Texture *texture = nullptr;
+  bool enabled = false;
+  int filter = TEXTURE_FILTER_NEAREST;
 };
 
 struct RasterFrame {
@@ -41,23 +51,31 @@ glm::vec3 evaluatePhongLighting(const glm::vec3 &baseColor,
                                 const LightingParams &light,
                                 bool includeSpecular);
 
+void evaluatePhongComponents(const glm::vec3 &baseColor,
+                             const glm::vec3 &normalEye,
+                             const glm::vec3 &posEye,
+                             const LightingParams &light, bool includeSpecular,
+                             glm::vec3 &ambientDiffuse, glm::vec3 &specular);
+
 void ensureRasterFrameSize(RasterFrame &frame, int width, int height);
 void clearRasterFrame(RasterFrame &frame, const glm::vec4 &clearColor);
 
 void rasterizeSolidTriangle(const RasterVertex &v0, const RasterVertex &v1,
                             const RasterVertex &v2, int shadingMode,
                             const glm::vec3 &baseColor,
-                            const LightingParams &light, RasterFrame &frame);
+                            const LightingParams &light,
+                            const TextureState &tex, RasterFrame &frame);
 
 void rasterizeWireTriangle(const RasterVertex &v0, const RasterVertex &v1,
                            const RasterVertex &v2, int shadingMode,
                            const glm::vec3 &baseColor,
-                           const LightingParams &light, RasterFrame &frame);
+                           const LightingParams &light, const TextureState &tex,
+                           RasterFrame &frame);
 
 void rasterizeVertexPoint(const RasterVertex &v, int shadingMode,
                           const glm::vec3 &baseColor,
-                          const LightingParams &light, float pointSize,
-                          RasterFrame &frame);
+                          const LightingParams &light, const TextureState &tex,
+                          float pointSize, RasterFrame &frame);
 
 bool trianglePassesClipZ(const glm::vec3 &n0, const glm::vec3 &n1,
                          const glm::vec3 &n2);

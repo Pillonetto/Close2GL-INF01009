@@ -12,6 +12,19 @@ float edgeFunction(const glm::vec2 &a, const glm::vec2 &b, const glm::vec2 &p) {
   return (p.x - a.x) * (b.y - a.y) - (p.y - a.y) * (b.x - a.x);
 }
 
+float clampUnit(float v) { return v < 0.f ? 0.f : (v > 1.f ? 1.f : v); }
+
+glm::vec3 combineWithTexture(const glm::vec3 &ambientDiffuse,
+                             const glm::vec3 &specular, const TextureState &tex,
+                             float s, float t, float lod) {
+  if (tex.enabled && tex.texture && tex.texture->valid) {
+    const glm::vec4 texel =
+        tex.texture->sample(clampUnit(s), clampUnit(t), tex.filter, lod);
+    return ambientDiffuse * glm::vec3(texel) + specular;
+  }
+  return ambientDiffuse + specular;
+}
+
 void shadeAndWritePixel(RasterFrame &frame, int x, int y, float ndcDepth,
                         const glm::vec3 &rgb) {
   // check if pixel is out of image
@@ -63,7 +76,8 @@ glm::vec3 interpolatePerspectiveVec3(const RasterVertex &v0,
 // rasterize a line segment between two vertices
 void rasterizeWireEdge(const RasterVertex &v0, const RasterVertex &v1,
                        int shadingMode, const glm::vec3 &baseColor,
-                       const LightingParams &light, RasterFrame &frame) {
+                       const LightingParams &light, const TextureState &tex,
+                       RasterFrame &frame) {
   const float dx = v1.screen.x - v0.screen.x;
   const float dy = v1.screen.y - v0.screen.y;
   const int steps = glm::max(
@@ -77,27 +91,40 @@ void rasterizeWireEdge(const RasterVertex &v0, const RasterVertex &v1,
     const int py = static_cast<int>(std::lround(y));
 
     const float depthNdc = v0.ndc.z + t * (v1.ndc.z - v0.ndc.z);
+    const float invW = (1.f - t) * v0.invW + t * v1.invW;
 
-    glm::vec3 pixelColor = baseColor;
+    glm::vec3 ambientDiffuse = baseColor;
+    glm::vec3 specular(0.f);
     if (shadingMode == 1 || shadingMode == 2) {
-      const float invW = (1.f - t) * v0.invW + t * v1.invW;
       if (std::abs(invW) > 1e-8f) {
-        const glm::vec3 num = (1.f - t) * v0.gouraudColor * v0.invW +
-                              t * v1.gouraudColor * v1.invW;
-        pixelColor = num / invW;
+        ambientDiffuse = ((1.f - t) * v0.gouraudColor * v0.invW +
+                          t * v1.gouraudColor * v1.invW) /
+                         invW;
+        specular = ((1.f - t) * v0.gouraudSpecular * v0.invW +
+                    t * v1.gouraudSpecular * v1.invW) /
+                   invW;
       }
     } else if (shadingMode == 3) {
-      const float invW = (1.f - t) * v0.invW + t * v1.invW;
       if (std::abs(invW) > 1e-8f) {
         const glm::vec3 normalNum =
             (1.f - t) * v0.normalEye * v0.invW + t * v1.normalEye * v1.invW;
         const glm::vec3 posNum =
             (1.f - t) * v0.posEye * v0.invW + t * v1.posEye * v1.invW;
-        pixelColor =
-            evaluatePhongLighting(baseColor, glm::normalize(normalNum / invW),
-                                  posNum / invW, light, true);
+        evaluatePhongComponents(baseColor, glm::normalize(normalNum / invW),
+                                posNum / invW, light, true, ambientDiffuse,
+                                specular);
       }
     }
+
+    float s = 0.f, tt = 0.f;
+    if (tex.enabled && std::abs(invW) > 1e-8f) {
+      s = ((1.f - t) * v0.texCoord.x * v0.invW + t * v1.texCoord.x * v1.invW) /
+          invW;
+      tt = ((1.f - t) * v0.texCoord.y * v0.invW + t * v1.texCoord.y * v1.invW) /
+           invW;
+    }
+    const glm::vec3 pixelColor =
+        combineWithTexture(ambientDiffuse, specular, tex, s, tt, 0.f);
 
     shadeAndWritePixel(frame, px, py, depthNdc, pixelColor);
   }
@@ -115,24 +142,35 @@ glm::vec2 ndcToScreen(const glm::vec3 &ndc, int width, int height) {
   return glm::vec2(sx, sy);
 }
 
+void evaluatePhongComponents(const glm::vec3 &baseColor,
+                             const glm::vec3 &normalEye,
+                             const glm::vec3 &posEye,
+                             const LightingParams &light, bool includeSpecular,
+                             glm::vec3 &ambientDiffuse, glm::vec3 &specular) {
+  const glm::vec3 N = glm::normalize(normalEye);
+  const glm::vec3 L = glm::normalize(light.lightPosEye - posEye);
+  const float ndotl = glm::max(glm::dot(N, L), 0.f);
+  ambientDiffuse = light.ambient * light.lightColor * baseColor +
+                   light.kd * ndotl * light.lightColor * baseColor;
+
+  specular = glm::vec3(0.f);
+  if (includeSpecular && ndotl > 0.f) {
+    const glm::vec3 V = glm::normalize(-posEye);
+    const glm::vec3 R = glm::reflect(-L, N);
+    const float spec = std::pow(glm::max(glm::dot(R, V), 0.f), light.shininess);
+    specular = light.ks * spec * light.lightColor;
+  }
+}
+
 glm::vec3 evaluatePhongLighting(const glm::vec3 &baseColor,
                                 const glm::vec3 &normalEye,
                                 const glm::vec3 &posEye,
                                 const LightingParams &light,
                                 bool includeSpecular) {
-  const glm::vec3 N = glm::normalize(normalEye);
-  const glm::vec3 L = glm::normalize(light.lightPosEye - posEye);
-  const float ndotl = glm::max(glm::dot(N, L), 0.f);
-  glm::vec3 output = light.ambient * light.lightColor * baseColor +
-                     light.kd * ndotl * light.lightColor * baseColor;
-
-  if (includeSpecular && ndotl > 0.f) {
-    const glm::vec3 V = glm::normalize(-posEye);
-    const glm::vec3 R = glm::reflect(-L, N);
-    const float spec = std::pow(glm::max(glm::dot(R, V), 0.f), light.shininess);
-    output += light.ks * spec * light.lightColor;
-  }
-  return clamp01(output);
+  glm::vec3 ambientDiffuse, specular;
+  evaluatePhongComponents(baseColor, normalEye, posEye, light, includeSpecular,
+                          ambientDiffuse, specular);
+  return clamp01(ambientDiffuse + specular);
 }
 
 void ensureRasterFrameSize(RasterFrame &frame, int width, int height) {
@@ -182,7 +220,8 @@ void clearRasterFrame(RasterFrame &frame, const glm::vec4 &clearColor) {
 void rasterizeSolidTriangle(const RasterVertex &inV0, const RasterVertex &inV1,
                             const RasterVertex &inV2, int shadingMode,
                             const glm::vec3 &baseColor,
-                            const LightingParams &light, RasterFrame &frame) {
+                            const LightingParams &light,
+                            const TextureState &tex, RasterFrame &frame) {
   RasterVertex v0 = inV0;
   RasterVertex v1 = inV1;
   RasterVertex v2 = inV2;
@@ -194,6 +233,8 @@ void rasterizeSolidTriangle(const RasterVertex &inV0, const RasterVertex &inV1,
     std::swap(v1, v2);
     area = -area;
   }
+  if (area < 1e-8f)
+    return;
 
   const float minXf =
       std::floor(glm::min(v0.screen.x, glm::min(v1.screen.x, v2.screen.x)));
@@ -208,6 +249,30 @@ void rasterizeSolidTriangle(const RasterVertex &inV0, const RasterVertex &inV1,
   const int maxX = glm::clamp(static_cast<int>(maxXf), 0, frame.width - 1);
   const int minY = glm::clamp(static_cast<int>(minYf), 0, frame.height - 1);
   const int maxY = glm::clamp(static_cast<int>(maxYf), 0, frame.height - 1);
+
+  const bool textured = tex.enabled && tex.texture && tex.texture->valid;
+  const bool trilinear = textured && tex.filter == TEXTURE_FILTER_TRILINEAR;
+  const float texW =
+      textured ? static_cast<float>(tex.texture->baseWidth()) : 1.f;
+  const float texH =
+      textured ? static_cast<float>(tex.texture->baseHeight()) : 1.f;
+
+  const float db0dx = (v2.screen.y - v1.screen.y) / area;
+  const float db1dx = (v0.screen.y - v2.screen.y) / area;
+  const float db2dx = (v1.screen.y - v0.screen.y) / area;
+
+  auto perspectiveST = [&](float b0, float b1, float b2) -> glm::vec2 {
+    const float oneOverW = b0 * v0.invW + b1 * v1.invW + b2 * v2.invW;
+    if (std::abs(oneOverW) < 1e-8f)
+      return glm::vec2(0.f);
+    const float sOverW = b0 * v0.texCoord.x * v0.invW +
+                         b1 * v1.texCoord.x * v1.invW +
+                         b2 * v2.texCoord.x * v2.invW;
+    const float tOverW = b0 * v0.texCoord.y * v0.invW +
+                         b1 * v1.texCoord.y * v1.invW +
+                         b2 * v2.texCoord.y * v2.invW;
+    return glm::vec2(sOverW / oneOverW, tOverW / oneOverW);
+  };
 
   for (int y = minY; y <= maxY; ++y) {
     for (int x = minX; x <= maxX; ++x) {
@@ -224,20 +289,41 @@ void rasterizeSolidTriangle(const RasterVertex &inV0, const RasterVertex &inV1,
       const float b2 = w2 / area;
       const float depthNdc = b0 * v0.ndc.z + b1 * v1.ndc.z + b2 * v2.ndc.z;
 
-      glm::vec3 pixelColor = baseColor;
+      glm::vec3 ambientDiffuse = baseColor;
+      glm::vec3 specular(0.f);
       if (shadingMode == 1 || shadingMode == 2) {
-        pixelColor = interpolatePerspectiveVec3(v0, v1, v2, v0.gouraudColor,
-                                                v1.gouraudColor,
-                                                v2.gouraudColor, b0, b1, b2);
+        ambientDiffuse = interpolatePerspectiveVec3(
+            v0, v1, v2, v0.gouraudColor, v1.gouraudColor, v2.gouraudColor, b0,
+            b1, b2);
+        specular = interpolatePerspectiveVec3(v0, v1, v2, v0.gouraudSpecular,
+                                              v1.gouraudSpecular,
+                                              v2.gouraudSpecular, b0, b1, b2);
       } else if (shadingMode == 3) {
         const glm::vec3 normalEye = glm::normalize(interpolatePerspectiveVec3(
             v0, v1, v2, v0.normalEye, v1.normalEye, v2.normalEye, b0, b1, b2));
         const glm::vec3 posEye = interpolatePerspectiveVec3(
             v0, v1, v2, v0.posEye, v1.posEye, v2.posEye, b0, b1, b2);
-        pixelColor =
-            evaluatePhongLighting(baseColor, normalEye, posEye, light, true);
+        evaluatePhongComponents(baseColor, normalEye, posEye, light, true,
+                                ambientDiffuse, specular);
       }
 
+      float s = 0.f, t = 0.f, lod = 0.f;
+      if (textured) {
+        const glm::vec2 st = perspectiveST(b0, b1, b2);
+        s = st.x;
+        t = st.y;
+        if (trilinear) {
+          const glm::vec2 stNext =
+              perspectiveST(b0 + db0dx, b1 + db1dx, b2 + db2dx);
+          const float ds = std::abs(stNext.x - s);
+          const float dt = std::abs(stNext.y - t);
+          const float rho = glm::max(ds * texW, dt * texH);
+          lod = rho > 1e-8f ? std::log2(rho) : 0.f;
+        }
+      }
+
+      const glm::vec3 pixelColor =
+          combineWithTexture(ambientDiffuse, specular, tex, s, t, lod);
       shadeAndWritePixel(frame, x, y, depthNdc, pixelColor);
     }
   }
@@ -246,23 +332,29 @@ void rasterizeSolidTriangle(const RasterVertex &inV0, const RasterVertex &inV1,
 void rasterizeWireTriangle(const RasterVertex &v0, const RasterVertex &v1,
                            const RasterVertex &v2, int shadingMode,
                            const glm::vec3 &baseColor,
-                           const LightingParams &light, RasterFrame &frame) {
-  rasterizeWireEdge(v0, v1, shadingMode, baseColor, light, frame);
-  rasterizeWireEdge(v1, v2, shadingMode, baseColor, light, frame);
-  rasterizeWireEdge(v2, v0, shadingMode, baseColor, light, frame);
+                           const LightingParams &light, const TextureState &tex,
+                           RasterFrame &frame) {
+  rasterizeWireEdge(v0, v1, shadingMode, baseColor, light, tex, frame);
+  rasterizeWireEdge(v1, v2, shadingMode, baseColor, light, tex, frame);
+  rasterizeWireEdge(v2, v0, shadingMode, baseColor, light, tex, frame);
 }
 
 void rasterizeVertexPoint(const RasterVertex &v, int shadingMode,
                           const glm::vec3 &baseColor,
-                          const LightingParams &light, float pointSize,
-                          RasterFrame &frame) {
-  glm::vec3 pixelColor = baseColor;
+                          const LightingParams &light, const TextureState &tex,
+                          float pointSize, RasterFrame &frame) {
+  glm::vec3 ambientDiffuse = baseColor;
+  glm::vec3 specular(0.f);
   if (shadingMode == 1 || shadingMode == 2) {
-    pixelColor = v.gouraudColor;
+    ambientDiffuse = v.gouraudColor;
+    specular = v.gouraudSpecular;
   } else if (shadingMode == 3) {
-    pixelColor =
-        evaluatePhongLighting(baseColor, v.normalEye, v.posEye, light, true);
+    evaluatePhongComponents(baseColor, v.normalEye, v.posEye, light, true,
+                            ambientDiffuse, specular);
   }
+
+  const glm::vec3 pixelColor = combineWithTexture(
+      ambientDiffuse, specular, tex, v.texCoord.x, v.texCoord.y, 0.f);
 
   const int radius =
       glm::max(0, static_cast<int>(std::floor(pointSize * 0.5f)));
